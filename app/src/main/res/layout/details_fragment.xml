@@ -15,7 +15,8 @@
         android:layout_marginBottom="10dp"
         android:adjustViewBounds="false"
         android:scaleType="centerCrop"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+        tools:srcCompat="@tools:sample/backgrounds/scenic"
+        android:contentDescription="TODO" />
 
     <TextView
         android:id="@+id/film_name"
@@ -25,7 +26,6 @@
         android:layout_marginTop="@dimen/between_height"
         android:layout_marginEnd="@dimen/between_height"
         android:layout_marginBottom="@dimen/between_height"
-        android:text="TextView"
         android:textSize="18sp"
         android:textStyle="bold" />
 
@@ -36,8 +36,7 @@
         android:layout_marginStart="@dimen/between_height"
         android:layout_marginTop="@dimen/between_height"
         android:layout_marginEnd="@dimen/between_height"
-        android:layout_marginBottom="@dimen/between_height"
-        android:text="TextView" />
+        android:layout_marginBottom="@dimen/between_height" />
 
     <TextView
         android:id="@+id/genre"
@@ -46,8 +45,7 @@
         android:layout_marginStart="@dimen/between_height"
         android:layout_marginTop="@dimen/between_height"
         android:layout_marginEnd="@dimen/between_height"
-        android:layout_marginBottom="@dimen/between_height"
-        android:text="TextView" />
+        android:layout_marginBottom="@dimen/between_height" />
 
     <TextView
         android:id="@+id/plot_summary"
@@ -56,6 +54,5 @@
         android:layout_marginStart="@dimen/between_height"
         android:layout_marginTop="@dimen/between_height"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:text="TextView" />
+        android:layout_marginBottom="8dp" />
 </LinearLayout>

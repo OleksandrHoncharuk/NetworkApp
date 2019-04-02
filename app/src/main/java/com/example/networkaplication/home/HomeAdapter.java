@@ -1,4 +1,4 @@
-package com.example.networkaplication;
+package com.example.networkaplication.home;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -9,24 +9,25 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.networkaplication.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
-    private ArrayList<ItemData> items;
-    private OnFilmClicked onFilmClicked;
+    private final ArrayList<ItemData> items;
+    private OnFilmClickedListener onFilmClickedListener;
 
-    HomeAdapter (List<ItemData> data) {
+    HomeAdapter(List<ItemData> data) {
         items = new ArrayList<>(data);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        ImageView image;
-        TextView title;
+        final ImageView image;
+        final TextView title;
 
-        ViewHolder (View itemLayoutView) {
+        ViewHolder(View itemLayoutView) {
             super(itemLayoutView);
 
             itemLayoutView.setOnClickListener(this);
@@ -36,7 +37,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
         @Override
         public void onClick(View v) {
-            onFilmClicked.onClicked(items.get(getAdapterPosition()));
+            onFilmClickedListener.onClicked(items.get(getAdapterPosition()));
         }
     }
 
@@ -49,8 +50,8 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         return new ViewHolder(itemLayoutView);
     }
 
-    void setOnFilmClicked(OnFilmClicked onFilmClicked) {
-        this.onFilmClicked = onFilmClicked;
+    void setOnFilmClickedListener(OnFilmClickedListener onFilmClickedListener) {
+        this.onFilmClickedListener = onFilmClickedListener;
     }
 
     @Override
@@ -67,7 +68,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         return items.size();
     }
 
-    public interface OnFilmClicked {
-        void onClicked (ItemData itemData);
+    public interface OnFilmClickedListener {
+        void onClicked(ItemData itemData);
     }
 }

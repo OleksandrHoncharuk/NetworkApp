@@ -1,10 +1,10 @@
-package com.example.networkaplication;
+package com.example.networkaplication.home;
 
-public class ItemData {
+class ItemData {
     private String imageUrl;
     private String title;
 
-    public ItemData (String imageUrl, String title) {
+    public ItemData(String imageUrl, String title) {
         this.imageUrl = imageUrl;
         this.title = title;
     }

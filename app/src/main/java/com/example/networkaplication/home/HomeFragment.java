@@ -1,7 +1,5 @@
-package com.example.networkaplication;
+package com.example.networkaplication.home;
 
-import android.app.ActionBar;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,7 +9,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,32 +17,38 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.networkaplication.pojo.item.search.Search;
-import com.example.networkaplication.pojo.item.search.SearchObject;
+import com.example.networkaplication.details.DetailsFragment;
+import com.example.networkaplication.MainActivity;
+import com.example.networkaplication.R;
+import com.example.networkaplication.models.search.Search;
+import com.example.networkaplication.models.search.SearchObject;
 import com.example.networkaplication.retrofit.NetworkService;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClicked {
+public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedListener {
 
     private RecyclerView recyclerView;
     private ArrayList<ItemData> itemData = new ArrayList<>();
 
-    public HomeFragment () {}
+    public HomeFragment() {
+    }
 
     @Override
     public void onStart() {
         super.onStart();
-        getActivity().setTitle("Home Screen");
+        Objects.requireNonNull(getActivity()).setTitle("Home Screen");
     }
 
     @Override
     public void onResume() {
-        ((MainActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        Objects.requireNonNull(((MainActivity) getActivity()).getSupportActionBar()).setDisplayHomeAsUpEnabled(false);
         super.onResume();
     }
 
@@ -64,9 +67,9 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClicked 
         recyclerView.setLayoutManager(grid);
 
         final EditText search = rootView.findViewById(R.id.search_button);
-        search.setFocusable(true);
-        search.setClickable(true);
-        search.setCursorVisible(true);
+//        search.setFocusable(true);
+//        search.setClickable(true);
+//        search.setCursorVisible(true);
 
         if (getArguments() != null) {
             ArrayList<String> listImages = getArguments().getStringArrayList("RESPONSE_IMAGES");
@@ -74,8 +77,8 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClicked 
 
             ArrayList<ItemData> data = new ArrayList<>();
 
-            for (int i = 0; i < listImages.size(); i++) {
-                data.add(new ItemData(listImages.get(i), listTitles.get(i)));
+            for (int i = 0; i < Objects.requireNonNull(listImages).size(); i++) {
+                data.add(new ItemData(listImages.get(i), Objects.requireNonNull(listTitles).get(i)));
             }
 
             itemData = data;
@@ -98,54 +101,16 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClicked 
     }
 
 
-    private void search (String searchRequest) {
-
-        final HomeFragment home = this;
-
-        final Bundle result = new Bundle();
-        final ArrayList<String> images = new ArrayList<>();
-        final ArrayList<String> titles = new ArrayList<>();
-
+    private void search(String searchRequest) {
         NetworkService.getInstance()
                 .getOMDBApi()
                 .getSearchResult(searchRequest)
-                .enqueue(new Callback<Search>() {
-                    @Override
-                    public void onResponse(Call<Search> call, Response<Search> response) {
-                        Search search = response.body();
-
-                        if (search.getSearch().size() != 0) {
-                            ArrayList<ItemData> data = new ArrayList<>();
-
-                            for (SearchObject object : search.getSearch()) {
-                                ItemData item = new ItemData(object.getPoster(), object.getTitle());
-
-                                images.add(object.getPoster());
-                                titles.add(object.getTitle());
-                                data.add(item);
-                            }
-
-                            itemData = data;
-                            result.putStringArrayList("RESPONSE_IMAGES", images);
-                            result.putStringArrayList("RESPONSE_TITLES", titles);
-                            home.setArguments(result);
-
-                            setItemDataToAdapter();
-                        }
-
-
-                    }
-
-                    @Override
-                    public void onFailure(Call<Search> call, Throwable t) {
-                        call.cancel();
-                    }
-                });
+                .enqueue(new SearchCallback(this));
     }
 
-    private void setItemDataToAdapter () {
+    private void setItemDataToAdapter() {
         HomeAdapter adapter = new HomeAdapter(itemData);
-        adapter.setOnFilmClicked(this);
+        adapter.setOnFilmClickedListener(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         adapter.notifyDataSetChanged();
@@ -154,11 +119,56 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClicked 
     @Override
     public void onClicked(ItemData itemData) {
         DetailsFragment fragment = DetailsFragment.newInstance(itemData.getTitle());
-        FragmentManager manager = getActivity().getSupportFragmentManager();
+        FragmentManager manager = Objects.requireNonNull(getActivity()).getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         transaction.addToBackStack("").replace(R.id.RelativeForFragments, fragment);
         transaction.commit();
-        ((MainActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((MainActivity) getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(true);
+        Objects.requireNonNull(((MainActivity) getActivity()).getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(((MainActivity) getActivity()).getSupportActionBar()).setDisplayShowHomeEnabled(true);
+    }
+
+    @SuppressWarnings("NullableProblems")
+    private static class SearchCallback implements Callback<Search> {
+        private final WeakReference<HomeFragment> homeWeakReference;
+
+        SearchCallback(HomeFragment fragment) {
+            homeWeakReference = new WeakReference<>(fragment);
+        }
+
+        @Override
+        public void onResponse(Call<Search> call, Response<Search> response) {
+            if (homeWeakReference.get() != null) {
+                HomeFragment home = homeWeakReference.get();
+                final Bundle result = new Bundle();
+                final ArrayList<String> images = new ArrayList<>();
+                final ArrayList<String> titles = new ArrayList<>();
+
+                Search search = response.body();
+
+                if (Objects.requireNonNull(search).getSearch() != null && search.getSearch().size() != 0) {
+                    ArrayList<ItemData> data = new ArrayList<>();
+
+                    for (SearchObject object : search.getSearch()) {
+                        ItemData item = new ItemData(object.getPoster(), object.getTitle());
+
+                        images.add(object.getPoster());
+                        titles.add(object.getTitle());
+                        data.add(item);
+                    }
+
+                    home.itemData = data;
+                    result.putStringArrayList("RESPONSE_IMAGES", images);
+                    result.putStringArrayList("RESPONSE_TITLES", titles);
+                    home.setArguments(result);
+
+                    home.setItemDataToAdapter();
+                }
+            }
+        }
+
+        @Override
+        public void onFailure(Call<Search> call, Throwable t) {
+            call.cancel();
+        }
     }
 }

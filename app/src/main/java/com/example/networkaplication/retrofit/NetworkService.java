@@ -7,10 +7,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NetworkService {
     private static NetworkService service;
-    private final static String BASE_URL = "http://www.omdbapi.com/";
-    private Retrofit retrofit;
+    public final static String BASE_URL = "http://www.omdbapi.com/";
+    private final Retrofit retrofit;
 
-    private NetworkService () {
+    private NetworkService() {
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -31,7 +31,7 @@ public class NetworkService {
         return service;
     }
 
-    public OMDBApiInterface getOMDBApi () {
+    public OMDBApiInterface getOMDBApi() {
         return retrofit.create(OMDBApiInterface.class);
     }
 }

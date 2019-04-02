@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Network aplication</string>
+    <string name="app_name">Network application</string>
     <string name="action_settings">Settings</string>
     <string name="web_view">WebView</string>
     <string name="browser">Browser</string>

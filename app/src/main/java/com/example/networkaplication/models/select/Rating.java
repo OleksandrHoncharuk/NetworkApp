@@ -1,9 +1,9 @@
-package com.example.networkaplication.pojo.item.select;
+package com.example.networkaplication.models.select;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Rating {
+class Rating {
     @SerializedName("Source")
     @Expose
     private String source;

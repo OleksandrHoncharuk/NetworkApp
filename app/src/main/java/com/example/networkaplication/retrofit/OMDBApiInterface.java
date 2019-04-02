@@ -1,17 +1,18 @@
 package com.example.networkaplication.retrofit;
 
-import com.example.networkaplication.pojo.item.search.Search;
-import com.example.networkaplication.pojo.item.select.MovieDetail;
+import com.example.networkaplication.models.search.Search;
+import com.example.networkaplication.models.select.MovieDetail;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
 public interface OMDBApiInterface {
+    String API_KEY = "?&apikey=c1645dc5";
 
-    @GET("?&apikey=c1645dc5")
-    Call<Search> getSearchResult (@Query("s") String search);
+    @GET(API_KEY)
+    Call<Search> getSearchResult(@Query("s") String search);
 
-    @GET("?&apikey=c1645dc5")
-    Call<MovieDetail> getMovieDetails (@Query("t") String movieName);
+    @GET(API_KEY)
+    Call<MovieDetail> getMovieDetails(@Query("t") String movieName);
 }

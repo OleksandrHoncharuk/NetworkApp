@@ -1,4 +1,4 @@
-package com.example.networkaplication;
+package com.example.networkaplication.webview;
 
 import android.annotation.TargetApi;
 import android.os.Build;
@@ -6,7 +6,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-public class MyWebViewClient extends WebViewClient {
+class MyWebViewClient extends WebViewClient {
 
     @TargetApi(Build.VERSION_CODES.N)
     @Override

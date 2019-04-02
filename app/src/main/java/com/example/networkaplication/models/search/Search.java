@@ -1,4 +1,4 @@
-package com.example.networkaplication.pojo.item.search;
+package com.example.networkaplication.models.search;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
