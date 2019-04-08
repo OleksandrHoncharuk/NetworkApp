@@ -6,13 +6,19 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -22,6 +28,10 @@ import com.example.networkaplication.MainActivity;
 import com.example.networkaplication.R;
 import com.example.networkaplication.models.search.Search;
 import com.example.networkaplication.models.search.SearchObject;
+import com.example.networkaplication.persistance.model.MovieQuery;
+import com.example.networkaplication.persistance.repository.Repositories;
+import com.example.networkaplication.persistance.repository.database.DatabaseRepositoryImpl;
+import com.example.networkaplication.persistance.repository.database.dao.MovieQueryDao;
 import com.example.networkaplication.retrofit.NetworkService;
 
 import java.lang.ref.WeakReference;
@@ -32,10 +42,18 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedListener {
+public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedListener,
+        SearchStoryAdapter.OnSearchItemClickedListener, TextView.OnEditorActionListener, TextWatcher,
+        View.OnFocusChangeListener {
 
     private RecyclerView recyclerView;
     private ArrayList<ItemData> itemData = new ArrayList<>();
+    private ArrayList<SearchItem> searchItems = new ArrayList<>();
+    private MovieQueryDao movieQueryDao;
+    private RecyclerView searchRecycleView;
+    private SearchStoryAdapter searchAdapter;
+    private HomeFragment home = this;
+    private EditText search;
 
     public HomeFragment() {
     }
@@ -48,7 +66,9 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
 
     @Override
     public void onResume() {
-        Objects.requireNonNull(((MainActivity) getActivity()).getSupportActionBar()).setDisplayHomeAsUpEnabled(false);
+        Objects.requireNonNull(((MainActivity) Objects.requireNonNull(getActivity()))
+                .getSupportActionBar())
+                .setDisplayHomeAsUpEnabled(false);
         super.onResume();
     }
 
@@ -60,46 +80,69 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
         recyclerView = rootView.findViewById(R.id.home_recycle_view);
         GridLayoutManager grid = new GridLayoutManager(getActivity(), 2);
         recyclerView.setLayoutManager(grid);
 
-        final EditText search = rootView.findViewById(R.id.search_button);
-//        search.setFocusable(true);
-//        search.setClickable(true);
-//        search.setCursorVisible(true);
+        DatabaseRepositoryImpl db = (DatabaseRepositoryImpl) Repositories.getDatabase(home.getContext());
+        movieQueryDao = db.movieQueryDao();
 
-        if (getArguments() != null) {
-            ArrayList<String> listImages = getArguments().getStringArrayList("RESPONSE_IMAGES");
-            ArrayList<String> listTitles = getArguments().getStringArrayList("RESPONSE_TITLES");
+//        movieQueryDao.deleteAll();
 
-            ArrayList<ItemData> data = new ArrayList<>();
+        searchRecycleView = rootView.findViewById(R.id.search_recycle_view);
 
-            for (int i = 0; i < Objects.requireNonNull(listImages).size(); i++) {
-                data.add(new ItemData(listImages.get(i), Objects.requireNonNull(listTitles).get(i)));
-            }
+        LinearLayoutManager manager = new LinearLayoutManager(container.getContext());
+        searchRecycleView.setLayoutManager(manager);
+        searchRecycleView.addItemDecoration(
+                new DividerItemDecoration(container.getContext(), manager.getOrientation()));
+        searchAdapter = new SearchStoryAdapter(searchItems);
+        searchAdapter.setOnSearchItemClickedListener(home);
+        searchRecycleView.setAdapter(searchAdapter);
+        searchRecycleView.setItemAnimator(new DefaultItemAnimator());
 
-            itemData = data;
-            setItemDataToAdapter();
-        }
-
-        search.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                boolean result = false;
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    search(v.getText().toString());
-                    result = true;
-                }
-                return result;
-            }
-        });
+        search = rootView.findViewById(R.id.search_button);
+        search.setOnEditorActionListener(this);
+        search.addTextChangedListener(this);
+        search.setOnFocusChangeListener(this);
+        restoreSearchResult();
 
         return rootView;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        view.requestFocus();
+        super.onViewCreated(view, savedInstanceState);
+    }
+
+    public EditText getSearch() {
+        return search;
+    }
+
+    private void restoreSearchResult () {
+        if (getArguments() != null) {
+            ArrayList<String> listImages = getArguments().getStringArrayList("RESPONSE_IMAGES");
+            ArrayList<String> listTitles = getArguments().getStringArrayList("RESPONSE_TITLES");
+            ArrayList<String> listIds = getArguments().getStringArrayList("RESPONSE_IDS");
+
+            ArrayList<ItemData> data = new ArrayList<>();
+
+            for (int i = 0; i < Objects.requireNonNull(listImages).size(); i++) {
+                data.add(new ItemData(listImages.get(i),
+                        Objects.requireNonNull(listTitles).get(i),
+                        Objects.requireNonNull(listIds).get(i)));
+            }
+
+            search.setText("");
+            itemData = data;
+            setItemDataToAdapter();
+            refreshSearchAdapter(new ArrayList<SearchItem>());
+        }
+    }
 
     private void search(String searchRequest) {
         NetworkService.getInstance()
@@ -116,15 +159,86 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
         adapter.notifyDataSetChanged();
     }
 
+    private void refreshSearchAdapter(ArrayList<SearchItem> item) {
+        if (item.size() == 0)
+            searchRecycleView.setVisibility(View.INVISIBLE);
+         else
+            searchRecycleView.setVisibility(View.VISIBLE);
+
+        searchItems = item;
+        searchAdapter.refresh(searchItems);
+        searchAdapter.notifyDataSetChanged();
+    }
+
     @Override
     public void onClicked(ItemData itemData) {
-        DetailsFragment fragment = DetailsFragment.newInstance(itemData.getTitle());
+        DetailsFragment fragment = DetailsFragment.newInstance(itemData.getTitle(), itemData.getOmdbId());
         FragmentManager manager = Objects.requireNonNull(getActivity()).getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
-        transaction.addToBackStack("").replace(R.id.RelativeForFragments, fragment);
+        transaction.addToBackStack(DetailsFragment.class.getSimpleName())
+                .replace(R.id.RelativeForFragments, fragment);
         transaction.commit();
-        Objects.requireNonNull(((MainActivity) getActivity()).getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        Objects.requireNonNull(((MainActivity) getActivity()).getSupportActionBar()).setDisplayShowHomeEnabled(true);
+        Objects.requireNonNull(((MainActivity) getActivity())
+                .getSupportActionBar())
+                .setDisplayHomeAsUpEnabled(true);
+    }
+
+    @Override
+    public void onClickedSearchItem(View view, SearchItem itemData) {
+        if (view.getId() == R.id.delete_query) {
+            searchItems.remove(itemData);
+            refreshSearchAdapter(searchItems);
+        }
+        else {
+            getSearch().setText(itemData.getSearchText());
+            refreshSearchAdapter(new ArrayList<SearchItem>());
+        }
+    }
+
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        boolean result = false;
+        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+            search(v.getText().toString());
+            refreshSearchAdapter(new ArrayList<SearchItem>());
+            result = true;
+        }
+        return result;
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//        searchItems = new ArrayList<>();
+//        refreshSearchAdapter(searchItems);
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        searchItems = new ArrayList<>();
+        refreshSearchAdapter(searchItems);
+
+        ArrayList<MovieQuery> movies = new ArrayList<>(movieQueryDao
+                .findAllLike(s.toString() + "%"));
+
+        for (MovieQuery movie : movies) {
+            searchItems.add(new SearchItem(movie.getName()));
+        }
+
+        refreshSearchAdapter(searchItems);
+    }
+
+    @Override
+    public void afterTextChanged(Editable s) {
+
+    }
+
+    @Override
+    public void onFocusChange(View v, boolean hasFocus) {
+        if (hasFocus) {
+            refreshSearchAdapter(searchItems);
+        } else {
+            refreshSearchAdapter(new ArrayList<SearchItem>());
+        }
     }
 
     @SuppressWarnings("NullableProblems")
@@ -139,26 +253,43 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
         public void onResponse(Call<Search> call, Response<Search> response) {
             if (homeWeakReference.get() != null) {
                 HomeFragment home = homeWeakReference.get();
+                home.itemData = new ArrayList<>();
+
                 final Bundle result = new Bundle();
                 final ArrayList<String> images = new ArrayList<>();
                 final ArrayList<String> titles = new ArrayList<>();
+                final ArrayList<String> ids = new ArrayList<>();
 
                 Search search = response.body();
 
                 if (Objects.requireNonNull(search).getSearch() != null && search.getSearch().size() != 0) {
+
+                    String title = home.getSearch().getText().toString();
+
+                    if (home.movieQueryDao.findByTitle(title) == null) {
+                        MovieQuery movieQuery = new MovieQuery(home.getSearch().getText().toString(),
+                                System.currentTimeMillis());
+                        home.movieQueryDao.insert(movieQuery);
+                    }
+
                     ArrayList<ItemData> data = new ArrayList<>();
 
                     for (SearchObject object : search.getSearch()) {
-                        ItemData item = new ItemData(object.getPoster(), object.getTitle());
+                        ItemData item = new ItemData(
+                                object.getPoster(),
+                                object.getTitle(),
+                                object.getImdbID());
 
                         images.add(object.getPoster());
                         titles.add(object.getTitle());
+                        ids.add(object.getImdbID());
                         data.add(item);
                     }
 
                     home.itemData = data;
                     result.putStringArrayList("RESPONSE_IMAGES", images);
                     result.putStringArrayList("RESPONSE_TITLES", titles);
+                    result.putStringArrayList("RESPONSE_IDS", ids);
                     home.setArguments(result);
 
                     home.setItemDataToAdapter();
