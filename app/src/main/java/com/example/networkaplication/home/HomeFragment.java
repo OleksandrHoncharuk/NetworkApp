@@ -1,12 +1,12 @@
 package com.example.networkaplication.home;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
@@ -14,12 +14,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -54,6 +55,7 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
     private SearchStoryAdapter searchAdapter;
     private HomeFragment home = this;
     private EditText search;
+    private static boolean isSearchViewPopped = true;
 
     public HomeFragment() {
     }
@@ -124,6 +126,9 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
     }
 
     private void restoreSearchResult () {
+        Log.d("RESTORE", "before if");
+
+        refreshSearchAdapter(new ArrayList<SearchItem>());
         if (getArguments() != null) {
             ArrayList<String> listImages = getArguments().getStringArrayList("RESPONSE_IMAGES");
             ArrayList<String> listTitles = getArguments().getStringArrayList("RESPONSE_TITLES");
@@ -137,14 +142,14 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
                         Objects.requireNonNull(listIds).get(i)));
             }
 
-            search.setText("");
             itemData = data;
             setItemDataToAdapter();
-            refreshSearchAdapter(new ArrayList<SearchItem>());
         }
+        Log.d("RESTORE", "after if");
     }
 
     private void search(String searchRequest) {
+        Log.d("NETWORK_SEARCH", "network search");
         NetworkService.getInstance()
                 .getOMDBApi()
                 .getSearchResult(searchRequest)
@@ -197,10 +202,13 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
 
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        Log.d("EDITOR_ACTION", "editor search before if");
         boolean result = false;
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-            search(v.getText().toString());
+            Log.d("EDITOR_ACTION", "editor search inside if");
+            hideKeyboardFromView(v);
             refreshSearchAdapter(new ArrayList<SearchItem>());
+            search(v.getText().toString());
             result = true;
         }
         return result;
@@ -208,23 +216,22 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
 
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//        searchItems = new ArrayList<>();
-//        refreshSearchAdapter(searchItems);
+        Log.d("BEFORE_TEXT", "before text changed");
     }
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-        searchItems = new ArrayList<>();
-        refreshSearchAdapter(searchItems);
+        refreshSearchAdapter(new ArrayList<SearchItem>());
+        if (isSearchViewPopped) {
+            ArrayList<MovieQuery> movies = new ArrayList<>(movieQueryDao
+                    .findAllLike(s.toString() + "%"));
 
-        ArrayList<MovieQuery> movies = new ArrayList<>(movieQueryDao
-                .findAllLike(s.toString() + "%"));
+            for (MovieQuery movie : movies) {
+                searchItems.add(new SearchItem(movie.getName()));
+            }
 
-        for (MovieQuery movie : movies) {
-            searchItems.add(new SearchItem(movie.getName()));
-        }
-
-        refreshSearchAdapter(searchItems);
+            refreshSearchAdapter(searchItems);
+        } else isSearchViewPopped = !isSearchViewPopped;
     }
 
     @Override
@@ -238,6 +245,7 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
             refreshSearchAdapter(searchItems);
         } else {
             refreshSearchAdapter(new ArrayList<SearchItem>());
+            hideKeyboardFromView(v);
         }
     }
 
@@ -301,5 +309,15 @@ public class HomeFragment extends Fragment implements HomeAdapter.OnFilmClickedL
         public void onFailure(Call<Search> call, Throwable t) {
             call.cancel();
         }
+    }
+
+    public void hideKeyboardFromView (View view) {
+        InputMethodManager imm = (InputMethodManager) getContext()
+                .getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    public static void setSearchViewPopped(boolean searchViewPopped) {
+        isSearchViewPopped = searchViewPopped;
     }
 }

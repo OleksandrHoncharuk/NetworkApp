@@ -35,6 +35,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.example.networkaplication.MainActivity;
 import com.example.networkaplication.R;
+import com.example.networkaplication.home.HomeFragment;
 import com.example.networkaplication.models.select.MovieDetail;
 import com.example.networkaplication.persistance.model.Details;
 import com.example.networkaplication.persistance.repository.Repositories;
@@ -177,6 +178,7 @@ public class DetailsFragment extends Fragment implements View.OnClickListener {
     }
 
     private void backClicked() {
+        HomeFragment.setSearchViewPopped(false);
         Objects.requireNonNull(getActivity()).onBackPressed();
     }
 
