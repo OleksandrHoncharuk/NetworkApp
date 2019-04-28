@@ -1,4 +1,4 @@
-package com.example.networkaplication.home;
+package com.example.networkaplication.home.search.story;
 
 public class SearchItem {
     private String searchText;

@@ -1,6 +1,6 @@
-package com.example.networkaplication.home;
+package com.example.networkaplication.home.adapter;
 
-class ItemData {
+public class ItemData {
     private String imageUrl;
     private String title;
     private String omdbId;

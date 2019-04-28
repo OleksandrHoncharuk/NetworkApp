@@ -12,10 +12,8 @@ import android.view.Menu;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.example.networkaplication.details.DetailsFragment;
-import com.example.networkaplication.home.HomeFragment;
-
-import java.util.Objects;
+import com.example.networkaplication.details.DetailsViewFragment;
+import com.example.networkaplication.home.HomeViewFragment;
 
 public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
@@ -32,10 +30,9 @@ public class MainActivity extends AppCompatActivity {
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
 
-        HomeFragment home = new HomeFragment();
         FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
-        transaction.replace(R.id.RelativeForFragments, home);
+        transaction.replace(R.id.RelativeForFragments, new HomeViewFragment());
         transaction.commit();
     }
 
@@ -48,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    DetailsFragment fragment = (DetailsFragment)this.getSupportFragmentManager()
-                            .findFragmentByTag(DetailsFragment.class.getSimpleName());
+                    DetailsViewFragment fragment = (DetailsViewFragment) this.getSupportFragmentManager()
+                            .findFragmentByTag(DetailsViewFragment.class.getSimpleName());
 
                     fragment.saveImageToExStorage();
                 } else {
