@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="tool_bar_margin">24dp</dimen>
+    <dimen name="content_height">683dp</dimen>
+    <dimen name="image_width">450dp</dimen>
+    <dimen name="image_height">400dp</dimen>
+    <dimen name="between_height">5dp</dimen>
+</resources>
