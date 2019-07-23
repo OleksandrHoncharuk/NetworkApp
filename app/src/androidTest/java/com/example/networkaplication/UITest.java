@@ -33,12 +33,12 @@ public class UITest {
 
     @Before
     public void registerIdlingResource() {
-        IdlingRegistry.getInstance().register(EspressoIdlingResource.getIdlingResource());
+        IdlingRegistry.getInstance().register(EspressoIdlingResource.INSTANCE.getIdlingResource());
     }
 
     @After
     public void unregisterIdlingResource() {
-        IdlingRegistry.getInstance().unregister(EspressoIdlingResource.getIdlingResource());
+        IdlingRegistry.getInstance().unregister(EspressoIdlingResource.INSTANCE.getIdlingResource());
     }
 
     @Test
