@@ -2,7 +2,7 @@ package com.example.networkaplication.home.adapter
 
 import java.util.ArrayList
 
-class ListPresenter(private val items: ArrayList<ItemData>) {
+class ListPresenter(private var items: ArrayList<ItemData>) {
 
     val rowsCount: Int
         get() = items.size
@@ -15,5 +15,9 @@ class ListPresenter(private val items: ArrayList<ItemData>) {
 
     operator fun get(position: Int): ItemData {
         return items[position]
+    }
+
+    internal fun refreshSearch(refreshList: ArrayList<ItemData>) {
+        this.items = ArrayList(refreshList)
     }
 }

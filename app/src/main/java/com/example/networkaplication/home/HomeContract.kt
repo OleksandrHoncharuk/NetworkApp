@@ -30,19 +30,13 @@ interface HomeContract {
         fun setSearchText(text: String)
 
         fun setRecycleViewAdapter(adapter: HomeAdapter)
-
-        fun setSearchAdapter(item: ArrayList<SearchItem>)
-
-        fun setBundleFromSearch(searchObjects: List<SearchObject>)
-
-        fun setItemDataToAdapter(itemData: ArrayList<ItemData>)
     }
 
     interface HomeViewModel {
 
         fun onEditorAction(v: TextView, actionId: Int): Boolean
 
-        fun setItemToDataAdapter(items: ArrayList<ItemData>)
+        fun setItemToDataAdapter()
 
         fun refreshSearchAdapter()
 

@@ -2,6 +2,7 @@ package com.example.networkaplication
 
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +13,7 @@ import com.example.networkaplication.details.DetailsViewFragment
 import com.example.networkaplication.home.HomeViewFragment
 
 class MainActivity : AppCompatActivity() {
+    private var home: HomeViewFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,9 +27,16 @@ class MainActivity : AppCompatActivity() {
         window.statusBarColor = ContextCompat.getColor(this, R.color.colorPrimaryDark)
 
         val manager = supportFragmentManager
-        val transaction = manager.beginTransaction()
-        transaction.replace(R.id.RelativeForFragments, HomeViewFragment())
-        transaction.commit()
+
+        home = manager.findFragmentByTag("home") as HomeViewFragment?
+
+        if (home == null) {
+            home = HomeViewFragment()
+            manager
+                    .beginTransaction()
+                    .replace(R.id.RelativeForFragments, HomeViewFragment(), "home")
+                    .commit()
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,

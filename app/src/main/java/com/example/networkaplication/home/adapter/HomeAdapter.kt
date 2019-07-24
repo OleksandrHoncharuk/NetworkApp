@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 import com.bumptech.glide.Glide
 import com.example.networkaplication.R
+import java.util.ArrayList
 
 class HomeAdapter(private val presenter: ListPresenter) : RecyclerView.Adapter<HomeAdapter.HomeViewHolder>() {
     private var onFilmClickedListener: OnFilmClickedListener? = null
@@ -32,6 +33,10 @@ class HomeAdapter(private val presenter: ListPresenter) : RecyclerView.Adapter<H
 
     interface OnFilmClickedListener {
         fun onClicked(itemData: ItemData)
+    }
+
+    fun refresh(items: ArrayList<ItemData>) {
+        presenter.refreshSearch(items)
     }
 
     inner class HomeViewHolder internal constructor(itemView: View) : RecyclerView.ViewHolder(itemView), RowView, View.OnClickListener {

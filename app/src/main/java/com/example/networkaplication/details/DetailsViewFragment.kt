@@ -102,6 +102,10 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
     override fun onStart() {
         super.onStart()
         activity!!.title = "Details"
+
+        (activity as MainActivity)
+                .supportActionBar!!
+                .setDisplayHomeAsUpEnabled(true)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -193,8 +197,8 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
     }
 
     companion object {
-        private val FILM_NAME = "FILM_NAME"
-        private val OMDBID = "OMDBID"
+        private const val FILM_NAME = "FILM_NAME"
+        private const val OMDBID = "OMDBID"
 
         fun newInstance(filmName: String, omdbId: String): DetailsViewFragment {
             val fragment = DetailsViewFragment()

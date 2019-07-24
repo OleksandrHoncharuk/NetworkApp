@@ -14,17 +14,29 @@ import com.example.networkaplication.home.adapter.HomeAdapter
 import com.example.networkaplication.home.adapter.ItemData
 import com.example.networkaplication.home.adapter.ListPresenter
 import com.example.networkaplication.home.search.story.SearchItem
+import com.example.networkaplication.home.search.story.SearchStoryAdapter
+import com.example.networkaplication.home.search.story.SearchStoryPresenter
+import com.example.networkaplication.idling.EspressoIdlingResource
 import com.example.networkaplication.models.search.Search
 import com.example.networkaplication.persistance.model.MovieQuery
 
 import java.util.ArrayList
 
 class HomeViewModelImpl internal constructor(application: Application, private val view: HomeContract.HomeView) : AndroidViewModel(application), HomeContract.HomeViewModel, HomeCallback {
+
     private val repository: HomeContract.HomeRepository
     private var searchItems = ArrayList<SearchItem>()
-     var items = ArrayList<ItemData>()
+    private var adapter: HomeAdapter
+    var searchAdapter: SearchStoryAdapter
+    var items = ArrayList<ItemData>()
 
     init {
+        adapter = HomeAdapter(ListPresenter(items))
+        adapter.setOnFilmClickedListener(view)
+
+        searchAdapter = SearchStoryAdapter(SearchStoryPresenter(searchItems))
+        searchAdapter.setOnSearchItemClickedListener(view)
+
         this.repository = HomeRepositoryImpl(application, this)
     }
 
@@ -39,10 +51,14 @@ class HomeViewModelImpl internal constructor(application: Application, private v
         return result
     }
 
-    override fun setItemToDataAdapter(items: ArrayList<ItemData>) {
-        val adapter = HomeAdapter(ListPresenter(this.items))
-        adapter.setOnFilmClickedListener(view)
+    override fun setItemToDataAdapter() {
+        adapter.refresh(items)
         view.setRecycleViewAdapter(adapter)
+        adapter.notifyDataSetChanged()
+
+        if (!EspressoIdlingResource.idlingResource.isIdleNow) {
+            EspressoIdlingResource.decrement()
+        }
     }
 
     override fun refreshSearchAdapter() {
@@ -51,13 +67,13 @@ class HomeViewModelImpl internal constructor(application: Application, private v
         else
             view.getSearchRecycle().visibility = View.VISIBLE
 
-        view.setSearchAdapter(searchItems)
+        setSearchItemToAdapter()
     }
 
     override fun clearSearchAdapter() {
         view.getSearchRecycle().visibility = View.INVISIBLE
         searchItems = ArrayList()
-        view.setSearchAdapter(searchItems)
+        setSearchItemToAdapter()
     }
 
     override fun createDetailsView(itemData: ItemData): DetailsViewFragment {
@@ -132,7 +148,11 @@ class HomeViewModelImpl internal constructor(application: Application, private v
         }
 
         items = data
-//        view.setBundleFromSearch(search.search!!)
-        view.setItemDataToAdapter(data)
+        setItemToDataAdapter()
+    }
+
+    private fun setSearchItemToAdapter() {
+        searchAdapter.refresh(searchItems)
+        searchAdapter.notifyDataSetChanged()
     }
 }
