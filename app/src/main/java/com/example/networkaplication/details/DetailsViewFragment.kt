@@ -52,6 +52,19 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
     override val image: Bitmap
         get() = (imageView.drawable as BitmapDrawable).bitmap
 
+    override fun onStart() {
+        super.onStart()
+        activity!!.title = "Details"
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        (activity as MainActivity)
+                .supportActionBar!!
+                .setDisplayHomeAsUpEnabled(true)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -97,15 +110,6 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
             viewModel.initViewById(omdbId)
 
         return rootView
-    }
-
-    override fun onStart() {
-        super.onStart()
-        activity!!.title = "Details"
-
-        (activity as MainActivity)
-                .supportActionBar!!
-                .setDisplayHomeAsUpEnabled(true)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {

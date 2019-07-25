@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+        <import type="android.view.View" />
         <variable
             name="viewModel"
             type="com.example.networkaplication.home.HomeContract.HomeViewModel" />
@@ -32,6 +33,10 @@
             android:importantForAutofill="no"
             android:inputType="text"
             android:textSize="18sp"
+            android:text="@={viewModel.searchText}"
+            android:onTextChanged="@{viewModel::onTextChanged}"
+            app:customOnEditorActionListener="@{viewModel}"
+            app:customOnFocusChangeListener="@{viewModel}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
@@ -65,6 +70,7 @@
             android:layout_marginBottom="8dp"
             android:background="#E6FFFFFF"
             android:scrollbars="vertical"
+            android:visibility="@{viewModel.searchItemEmpty ? View.INVISIBLE : View.VISIBLE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"

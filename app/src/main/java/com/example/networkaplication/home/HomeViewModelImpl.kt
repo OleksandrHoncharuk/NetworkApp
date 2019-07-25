@@ -6,8 +6,8 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
-import androidx.lifecycle.AndroidViewModel
-
+import androidx.databinding.ObservableField
+import androidx.lifecycle.ViewModel
 import com.example.networkaplication.R
 import com.example.networkaplication.details.DetailsViewFragment
 import com.example.networkaplication.home.adapter.HomeAdapter
@@ -19,36 +19,34 @@ import com.example.networkaplication.home.search.story.SearchStoryPresenter
 import com.example.networkaplication.idling.EspressoIdlingResource
 import com.example.networkaplication.models.search.Search
 import com.example.networkaplication.persistance.model.MovieQuery
+import java.util.*
 
-import java.util.ArrayList
-
-class HomeViewModelImpl internal constructor(application: Application, private val view: HomeContract.HomeView) : AndroidViewModel(application), HomeContract.HomeViewModel, HomeCallback {
+class HomeViewModelImpl internal constructor(application: Application, private val view: HomeContract.HomeView) : ViewModel(), HomeContract.HomeViewModel, HomeCallback {
 
     private val repository: HomeContract.HomeRepository
     private var searchItems = ArrayList<SearchItem>()
     private var adapter: HomeAdapter
     var searchAdapter: SearchStoryAdapter
-    var items = ArrayList<ItemData>()
+    private var items = ArrayList<ItemData>()
+
+    override val searchText: ObservableField<String> = ObservableField()
 
     init {
         adapter = HomeAdapter(ListPresenter(items))
-        adapter.setOnFilmClickedListener(view)
+        adapter.setOnFilmClickedListener(this)
 
         searchAdapter = SearchStoryAdapter(SearchStoryPresenter(searchItems))
-        searchAdapter.setOnSearchItemClickedListener(view)
+        searchAdapter.setOnSearchItemClickedListener(this)
 
         this.repository = HomeRepositoryImpl(application, this)
     }
 
-    override fun onEditorAction(v: TextView, actionId: Int): Boolean {
-        var result = false
+    override fun onEditorAction(v: TextView?, actionId: Int) {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-            hideKeyboard(v)
+            hideKeyboard(v!!)
             clearSearchAdapter()
             search(v.text.toString())
-            result = true
         }
-        return result
     }
 
     override fun setItemToDataAdapter() {
@@ -62,16 +60,10 @@ class HomeViewModelImpl internal constructor(application: Application, private v
     }
 
     override fun refreshSearchAdapter() {
-        if (searchItems.size == 0)
-            view.getSearchRecycle().visibility = View.INVISIBLE
-        else
-            view.getSearchRecycle().visibility = View.VISIBLE
-
         setSearchItemToAdapter()
     }
 
     override fun clearSearchAdapter() {
-        view.getSearchRecycle().visibility = View.INVISIBLE
         searchItems = ArrayList()
         setSearchItemToAdapter()
     }
@@ -93,17 +85,16 @@ class HomeViewModelImpl internal constructor(application: Application, private v
 
     override fun addUniqueMovie(title: String) {
         if (repository.findByTitle(title) == null) {
-            val movieQuery = MovieQuery(view.getSearchText()
-                    , System.currentTimeMillis())
+            val movieQuery = MovieQuery(searchText.get()!!, System.currentTimeMillis())
             repository.insertIntoQuery(movieQuery)
         }
     }
 
-    override fun onTextChanged(sequence: CharSequence, isSearchPopped: Boolean) {
+    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+        val isSearchPopped = HomeViewFragment.getIsSearchViewPopped()
         clearSearchAdapter()
         if (isSearchPopped) {
-            val movies = ArrayList(
-                    repository.findAllFromQuery("$sequence%"))
+            val movies = ArrayList(repository.findAllFromQuery("$s%"))
 
             for (movie in movies) {
                 searchItems.add(SearchItem(movie.name))
@@ -128,21 +119,34 @@ class HomeViewModelImpl internal constructor(application: Application, private v
                 searchItems.remove(itemData)
                 refreshSearchAdapter()
             } else {
-                view.setSearchText(itemData.searchText!!)
+                searchText.set(itemData.searchText)
                 clearSearchAdapter()
             }
 
+    override fun onClicked(itemData: ItemData) {
+        val manager = view.getHomeViewActivity().supportFragmentManager
+
+        manager
+                .beginTransaction()
+                .addToBackStack("Details")
+                .replace(R.id.RelativeForFragments,
+                        createDetailsView(itemData),
+                        DetailsViewFragment::class.java.simpleName)
+                .commit()
+    }
+
     override fun onSearchReceived(search: Search) {
-        val title = view.getSearchText()
-        addUniqueMovie(title)
+        val title = searchText.get()
+        addUniqueMovie(title!!)
+
 
         val data = ArrayList<ItemData>()
 
-        for (`object` in search.search!!) {
+        for (searchObject in search.search!!) {
             val item = ItemData(
-                    `object`.poster,
-                    `object`.title,
-                    `object`.imdbID)
+                    searchObject.poster,
+                    searchObject.title,
+                    searchObject.imdbID)
 
             data.add(item)
         }
@@ -154,5 +158,9 @@ class HomeViewModelImpl internal constructor(application: Application, private v
     private fun setSearchItemToAdapter() {
         searchAdapter.refresh(searchItems)
         searchAdapter.notifyDataSetChanged()
+    }
+
+    override fun isSearchItemEmpty(): Boolean {
+        return searchItems.size == 0
     }
 }

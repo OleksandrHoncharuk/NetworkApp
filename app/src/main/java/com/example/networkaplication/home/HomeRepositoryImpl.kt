@@ -29,7 +29,8 @@ class HomeRepositoryImpl internal constructor(app: Application, private val call
 
         movieQueryDao = repository.movieQueryDao()
 
-        val component = DaggerHomeComponent.builder()
+        val component = DaggerHomeComponent
+                .builder()
                 .appComponent((app as App).component)
                 .build()
         component.inject(this)
@@ -47,7 +48,7 @@ class HomeRepositoryImpl internal constructor(app: Application, private val call
         return movieQueryDao.findAllLike(search)
     }
 
-    override fun findByTitle(title: String): MovieQuery {
+    override fun findByTitle(title: String): MovieQuery? {
         return movieQueryDao.findByTitle(title)
     }
 

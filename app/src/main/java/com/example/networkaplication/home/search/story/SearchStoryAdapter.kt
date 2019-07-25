@@ -27,7 +27,7 @@ class SearchStoryAdapter(private val presenter: SearchStoryPresenter) : Recycler
         }
 
         override fun onClick(v: View) {
-            onSearchItemClickedListener!!.onClickedSearchItem(v, presenter.getSearchItem(adapterPosition))
+            onSearchItemClickedListener!!.onClickedSearchItem(v.id, presenter.getSearchItem(adapterPosition))
         }
 
         override fun setSearchStoryTest(text: String) {
@@ -53,7 +53,7 @@ class SearchStoryAdapter(private val presenter: SearchStoryPresenter) : Recycler
     }
 
     interface OnSearchItemClickedListener {
-        fun onClickedSearchItem(view: View, itemData: SearchItem)
+        fun onClickedSearchItem(viewId: Int, itemData: SearchItem)
     }
 
     fun refresh(items: ArrayList<SearchItem>) {
