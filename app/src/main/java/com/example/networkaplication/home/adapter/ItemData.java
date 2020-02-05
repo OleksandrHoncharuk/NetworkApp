@@ -1,12 +1,14 @@
-package com.example.networkaplication.home;
+package com.example.networkaplication.home.adapter;
 
-class ItemData {
+public class ItemData {
     private String imageUrl;
     private String title;
+    private String omdbId;
 
-    public ItemData(String imageUrl, String title) {
+    public ItemData(String imageUrl, String title, String omdbId) {
         this.imageUrl = imageUrl;
         this.title = title;
+        this.omdbId = omdbId;
     }
 
     public String getImageUrl() {
@@ -23,5 +25,13 @@ class ItemData {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getOmdbId() {
+        return omdbId;
+    }
+
+    public void setOmdbId(String omdbId) {
+        this.omdbId = omdbId;
     }
 }
