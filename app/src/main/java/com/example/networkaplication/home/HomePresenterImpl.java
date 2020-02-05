@@ -17,6 +17,7 @@ import com.example.networkaplication.home.adapter.ListPresenter;
 import com.example.networkaplication.home.search.story.SearchItem;
 import com.example.networkaplication.models.search.Search;
 import com.example.networkaplication.models.search.SearchObject;
+
 import com.example.networkaplication.persistance.model.MovieQuery;
 
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
             view.getSearchRecycle().setVisibility(View.INVISIBLE);
         else
             view.getSearchRecycle().setVisibility(View.VISIBLE);
-
+      
         view.setSearchAdapter(searchItems);
     }
 
@@ -83,6 +84,7 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
 
     @Override
     public void search(String searchRequest) {
+
         repository.startSearch(searchRequest);
     }
 
@@ -98,6 +100,7 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
     @Override
     public void onTextChanged(CharSequence sequence, boolean isSearchPopped) {
         clearSearchAdapter();
+      
         if (isSearchPopped) {
             ArrayList<MovieQuery> movies = new ArrayList<>(
                     repository.findAllFromQuery(sequence.toString() + "%"));

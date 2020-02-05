@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.example.networkaplication.MainActivity;
 import com.example.networkaplication.R;
+
 import com.example.networkaplication.details.DetailsViewFragment;
 import com.example.networkaplication.home.adapter.HomeAdapter;
 import com.example.networkaplication.home.adapter.ItemData;
@@ -29,6 +30,7 @@ import com.example.networkaplication.home.adapter.ListPresenter;
 import com.example.networkaplication.home.search.story.SearchItem;
 import com.example.networkaplication.home.search.story.SearchStoryAdapter;
 import com.example.networkaplication.home.search.story.SearchStoryPresenter;
+
 import com.example.networkaplication.idling.EspressoIdlingResource;
 import com.example.networkaplication.models.search.SearchObject;
 
@@ -102,12 +104,14 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
     }
 
     private void restoreSearchResult () {
+
         presenter.clearSearchAdapter();
         if (getArguments() != null) {
 
             ArrayList<String> listImages = getArguments().getStringArrayList("RESPONSE_IMAGES");
             ArrayList<String> listTitles = getArguments().getStringArrayList("RESPONSE_TITLES");
             ArrayList<String> listIds = getArguments().getStringArrayList("RESPONSE_IDS");
+
             ArrayList<ItemData> data = new ArrayList<>();
 
             for (int i = 0; i < listImages.size(); i++) {

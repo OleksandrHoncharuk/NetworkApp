@@ -9,10 +9,13 @@
 
     <ImageView
         android:id="@+id/detail_poster"
+
         android:layout_width="match_parent"
         android:layout_height="343dp"
         android:adjustViewBounds="false"
+        android:contentDescription="TODO"
         android:scaleType="centerCrop"
+
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_editor_absoluteX="-4dp"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />

@@ -3,7 +3,6 @@ package com.example.networkaplication.details;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.widget.ImageView;
-
 import com.example.networkaplication.persistance.model.Details;
 
 public interface DetailsContract {
@@ -17,7 +16,7 @@ public interface DetailsContract {
         void initDetails(Details details);
 
         ImageView getImageView();
-
+      
         void saveIsOffline();
 
         void backClicked();
@@ -30,7 +29,7 @@ public interface DetailsContract {
     }
 
     interface DetailsPresenter {
-
+      
         boolean onOptionItemSelected(int itemId);
 
         void initView(String filmName);

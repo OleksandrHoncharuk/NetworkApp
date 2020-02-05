@@ -80,9 +80,9 @@ public class DetailsPresenterImpl extends AndroidViewModel implements DetailsCon
                         movies.getCountry(), movies.getImdbRating());
         details.setDetails(detailsLine);
         details.setPlotSummary(movies.getPlot());
-
         view.initDetails(details);
     }
+
 
     private void setImage(String poster) {
         Glide

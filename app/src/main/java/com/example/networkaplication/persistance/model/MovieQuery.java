@@ -3,7 +3,6 @@ package com.example.networkaplication.persistance.model;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
-
 import java.util.Objects;
 
 @Entity(tableName = "movie_query")
@@ -60,4 +59,5 @@ public class MovieQuery {
     public int hashCode() {
         return Objects.hash(id, name, date);
     }
+
 }

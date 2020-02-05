@@ -18,6 +18,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -87,7 +88,6 @@ public class DetailsViewFragment extends Fragment implements DetailsContract.Det
         View rootView = inflater.inflate(R.layout.details_fragment, container, false);
 
         presenter = new DetailsPresenterImpl(getActivity().getApplication(), this);
-
         poster = rootView.findViewById(R.id.detail_poster);
         title = rootView.findViewById(R.id.film_name);
         details = rootView.findViewById(R.id.details);
@@ -185,7 +185,7 @@ public class DetailsViewFragment extends Fragment implements DetailsContract.Det
     public ImageView getImageView() {
         return poster;
     }
-
+          
     public void saveImageToExStorage(){
         presenter.onSaveImageClicked(omdbId);
     }

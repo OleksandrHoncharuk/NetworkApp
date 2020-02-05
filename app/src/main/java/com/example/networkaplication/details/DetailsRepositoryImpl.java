@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 
+
 import com.example.networkaplication.App;
 import com.example.networkaplication.idling.EspressoIdlingResource;
 import com.example.networkaplication.models.select.MovieDetail;
@@ -17,12 +18,11 @@ import com.example.networkaplication.retrofit.OMDBApiInterface;
 import com.example.networkaplication.retrofit.component.DaggerDetailsComponent;
 import com.example.networkaplication.retrofit.component.DetailsComponent;
 
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-
 import javax.inject.Inject;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

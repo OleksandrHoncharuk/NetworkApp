@@ -2,6 +2,7 @@ package com.example.networkaplication.home;
 
 import android.app.Application;
 
+
 import com.example.networkaplication.App;
 import com.example.networkaplication.idling.EspressoIdlingResource;
 import com.example.networkaplication.models.search.Search;
