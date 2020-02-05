@@ -3,6 +3,7 @@ package com.example.networkaplication.persistance.model;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import java.util.Objects;
 
 @Entity(tableName = "movie_query")
 public class MovieQuery {
@@ -16,7 +17,6 @@ public class MovieQuery {
 
     @Ignore
     public MovieQuery (String name, long date) {
-        this.id = id;
         this.name = name;
         this.date = date;
     }
@@ -44,4 +44,20 @@ public class MovieQuery {
     public void setDate(long date) {
         this.date = date;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MovieQuery that = (MovieQuery) o;
+        return id == that.id &&
+                date == that.date &&
+                Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, date);
+    }
+
 }

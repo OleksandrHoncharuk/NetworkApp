@@ -1,37 +1,51 @@
 package com.example.networkaplication.details;
 
 import android.app.Application;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 
+
+import com.example.networkaplication.App;
+import com.example.networkaplication.idling.EspressoIdlingResource;
 import com.example.networkaplication.models.select.MovieDetail;
 import com.example.networkaplication.persistance.model.Details;
 import com.example.networkaplication.persistance.repository.Repositories;
 import com.example.networkaplication.persistance.repository.database.DatabaseRepositoryImpl;
 import com.example.networkaplication.persistance.repository.database.dao.DetailsDao;
-import com.example.networkaplication.retrofit.NetworkService;
+import com.example.networkaplication.retrofit.OMDBApiInterface;
+import com.example.networkaplication.retrofit.component.DaggerDetailsComponent;
+import com.example.networkaplication.retrofit.component.DetailsComponent;
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-
+import javax.inject.Inject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetailsRepositoryImpl implements DetailsContract.DetailsRepository, Callback<MovieDetail>{
+public class DetailsRepositoryImpl implements DetailsContract.DetailsRepository, Callback<MovieDetail> {
 
     private DetailsDao detailsDao;
-    private MovieDetail movie;
     private DetailsCallback callback;
+
+    @Inject
+    OMDBApiInterface omdbApiInterface;
 
     private static File root = Environment.getExternalStorageDirectory();
 
 
-    public DetailsRepositoryImpl(Application app, DetailsCallback callback) {
+    DetailsRepositoryImpl(Application app, DetailsCallback callback) {
         DatabaseRepositoryImpl repository =
                 (DatabaseRepositoryImpl) Repositories.getDatabase(app.getApplicationContext());
+
+        DetailsComponent component = DaggerDetailsComponent.builder()
+                .appComponent(((App)app).getComponent())
+                .build();
+        component.inject(this);
 
         this.callback = callback;
 
@@ -65,15 +79,9 @@ public class DetailsRepositoryImpl implements DetailsContract.DetailsRepository,
 
     @Override
     public void loadDetails(String filmName) {
-        NetworkService.getInstance()
-                .getOMDBApi()
-                .getMovieDetails(filmName)
-                .enqueue(this);
-    }
+        EspressoIdlingResource.increment();
 
-    @Override
-    public MovieDetail getMovie() {
-        return this.movie;
+        omdbApiInterface.getMovieDetails(filmName).enqueue(this);
     }
 
     @Override

@@ -2,11 +2,7 @@ package com.example.networkaplication.details;
 
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.view.MenuItem;
 import android.widget.ImageView;
-
-import com.example.networkaplication.MainActivity;
-import com.example.networkaplication.models.select.MovieDetail;
 import com.example.networkaplication.persistance.model.Details;
 
 public interface DetailsContract {
@@ -20,23 +16,29 @@ public interface DetailsContract {
         void initDetails(Details details);
 
         ImageView getImageView();
+      
+        void saveIsOffline();
 
-        MainActivity getViewActivity();
+        void backClicked();
+
+        void showWebView();
+
+        void showBrowser();
+
+        void showAlertDialog();
     }
 
     interface DetailsPresenter {
-
-        boolean onOptionItemSelected(MenuItem item);
-
-        void saveImage(Bitmap imageToSave, String omdbId);
-
-        void loadImage(String omdbId);
+      
+        boolean onOptionItemSelected(int itemId);
 
         void initView(String filmName);
 
         void initViewById(String omdbId);
 
         void onSaveImageClicked(String omdbId);
+
+        boolean isOffline();
     }
 
 
@@ -47,8 +49,6 @@ public interface DetailsContract {
         Uri loadImage(String omdbId);
 
         void loadDetails(String filmName);
-
-        MovieDetail getMovie();
 
         Details getDetailFromId(String omdbId);
     }

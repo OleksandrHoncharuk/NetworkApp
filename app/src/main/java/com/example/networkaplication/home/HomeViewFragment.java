@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
@@ -20,22 +22,20 @@ import android.widget.TextView;
 
 import com.example.networkaplication.MainActivity;
 import com.example.networkaplication.R;
+
+import com.example.networkaplication.details.DetailsViewFragment;
 import com.example.networkaplication.home.adapter.HomeAdapter;
 import com.example.networkaplication.home.adapter.ItemData;
 import com.example.networkaplication.home.adapter.ListPresenter;
 import com.example.networkaplication.home.search.story.SearchItem;
 import com.example.networkaplication.home.search.story.SearchStoryAdapter;
 import com.example.networkaplication.home.search.story.SearchStoryPresenter;
-import com.example.networkaplication.models.search.Search;
+
+import com.example.networkaplication.idling.EspressoIdlingResource;
 import com.example.networkaplication.models.search.SearchObject;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Objects;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.List;
 
 public class HomeViewFragment extends Fragment implements HomeContract.HomeView {
 
@@ -83,8 +83,6 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
         GridLayoutManager grid = new GridLayoutManager(getActivity(), 2);
         recyclerView.setLayoutManager(grid);
 
-//        movieQueryDao.deleteAll();
-
         searchRecycleView = rootView.findViewById(R.id.search_recycle_view);
 
         LinearLayoutManager manager = new LinearLayoutManager(container.getContext());
@@ -106,18 +104,17 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
     }
 
     private void restoreSearchResult () {
-        Log.d("RESTORE", "before if");
 
-        presenter.refreshSearchAdapter(new ArrayList<SearchItem>());
+        presenter.clearSearchAdapter();
         if (getArguments() != null) {
 
             ArrayList<String> listImages = getArguments().getStringArrayList("RESPONSE_IMAGES");
             ArrayList<String> listTitles = getArguments().getStringArrayList("RESPONSE_TITLES");
             ArrayList<String> listIds = getArguments().getStringArrayList("RESPONSE_IDS");
-            Log.d("Inside if", listIds.size() + "");
+
             ArrayList<ItemData> data = new ArrayList<>();
 
-            for (int i = 0; i < Objects.requireNonNull(listImages).size(); i++) {
+            for (int i = 0; i < listImages.size(); i++) {
                 data.add(new ItemData(listImages.get(i),
                         listTitles.get(i),
                         listIds.get(i)));
@@ -125,7 +122,6 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
 
             setItemDataToAdapter(data);
         }
-        Log.d("RESTORE", "after if");
     }
 
     @Override
@@ -136,11 +132,6 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
     @Override
     public MainActivity getHomeViewActivity() {
         return (MainActivity)getActivity();
-    }
-
-    @Override
-    public RecyclerView getFragmentRecycle() {
-        return this.recyclerView;
     }
 
     @Override
@@ -156,12 +147,8 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
     }
 
     @Override
-    public void setItemData(ArrayList<ItemData> itemData) {
-        presenter.setItemToDataAdapter(itemData);
-    }
-
-    @Override
     public void setSearchAdapter(ArrayList<SearchItem> item) {
+        this.searchItems = item;
         searchAdapter.refresh(item);
         searchAdapter.notifyDataSetChanged();
     }
@@ -177,8 +164,23 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
     }
 
     @Override
-    public void setArgumentsToView(Bundle bundle) {
-        this.setArguments(bundle);
+    public void setBundleFromSearch(List<SearchObject> objects) {
+        final Bundle result = new Bundle();
+        final ArrayList<String> images = new ArrayList<>();
+        final ArrayList<String> titles = new ArrayList<>();
+        final ArrayList<String> ids = new ArrayList<>();
+
+        for (SearchObject object : objects) {
+            images.add(object.getPoster());
+            titles.add(object.getTitle());
+            ids.add(object.getImdbID());
+        }
+
+        result.putStringArrayList("RESPONSE_IMAGES", images);
+        result.putStringArrayList("RESPONSE_TITLES", titles);
+        result.putStringArrayList("RESPONSE_IDS", ids);
+
+        this.setArguments(result);
     }
 
     @Override
@@ -186,16 +188,10 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
         HomeAdapter adapter = new HomeAdapter(new ListPresenter(data));
         adapter.setOnFilmClickedListener(this);
         presenter.setItemToDataAdapter(data);
-    }
 
-    @Override
-    public void addMovieIfNotExist(String title) {
-        presenter.addUniqueMovie(title);
-    }
-
-    @Override
-    public boolean getIsSearchViewPopped() {
-        return isSearchViewPopped;
+        if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
+            EspressoIdlingResource.decrement();
+        }
     }
 
     public static void setIsSearchViewPopped(boolean bool) {
@@ -229,69 +225,23 @@ public class HomeViewFragment extends Fragment implements HomeContract.HomeView 
 
     @Override
     public void onClicked(ItemData itemData) {
-        presenter.startDetailsView(itemData);
+        FragmentManager manager = getActivity().getSupportFragmentManager();
+        FragmentTransaction transaction = manager.beginTransaction();
+        transaction
+                .addToBackStack("Details")
+                .replace(R.id.RelativeForFragments,
+                        presenter.createDetailsView(itemData),
+                        DetailsViewFragment.class.getSimpleName());
+
+        transaction.commit();
+
+        ((MainActivity) getActivity())
+                .getSupportActionBar()
+                .setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
     public void onClickedSearchItem(View view, SearchItem itemData) {
-        presenter.onClickedSearchItem(view, itemData);
-    }
-
-
-    public static class SearchCallback implements Callback<Search> {
-        private final WeakReference<HomeContract.HomeView> homeWeakReference;
-
-        SearchCallback(HomeContract.HomeView view) {
-            homeWeakReference = new WeakReference<>(view);
-        }
-
-        @Override
-        public void onResponse(Call<Search> call, Response<Search> response) {
-            if (homeWeakReference.get() != null) {
-                HomeContract.HomeView home = homeWeakReference.get();
-                home.setItemData(new ArrayList<ItemData>());
-
-                final Bundle result = new Bundle();
-                final ArrayList<String> images = new ArrayList<>();
-                final ArrayList<String> titles = new ArrayList<>();
-                final ArrayList<String> ids = new ArrayList<>();
-
-                Search search = response.body();
-
-                if (search.getSearch() != null && search.getSearch().size() != 0) {
-
-                    String title = home.getSearchText();
-                    home.addMovieIfNotExist(title);
-
-                    ArrayList<ItemData> data = new ArrayList<>();
-
-                    for (SearchObject object : search.getSearch()) {
-                        ItemData item = new ItemData(
-                                object.getPoster(),
-                                object.getTitle(),
-                                object.getImdbID());
-
-                        images.add(object.getPoster());
-                        titles.add(object.getTitle());
-                        ids.add(object.getImdbID());
-                        data.add(item);
-                        Log.d("Item", item.getTitle());
-                    }
-
-                    result.putStringArrayList("RESPONSE_IMAGES", images);
-                    result.putStringArrayList("RESPONSE_TITLES", titles);
-                    result.putStringArrayList("RESPONSE_IDS", ids);
-                    home.setArgumentsToView(result);
-
-                    Log.d("Not attached adapter", (home.getFragmentRecycle().getAdapter().getClass()) + "");
-                    home.setItemDataToAdapter(data);
-                }
-            }
-        }
-
-        @Override
-        public void onFailure(Call<Search> call, Throwable t) {
-            call.cancel();
-        }
+        presenter.onClickedSearchItem(view.getId(), itemData);
     }
 }

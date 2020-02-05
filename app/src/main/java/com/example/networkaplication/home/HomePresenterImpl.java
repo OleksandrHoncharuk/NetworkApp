@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -17,20 +15,23 @@ import com.example.networkaplication.home.adapter.HomeAdapter;
 import com.example.networkaplication.home.adapter.ItemData;
 import com.example.networkaplication.home.adapter.ListPresenter;
 import com.example.networkaplication.home.search.story.SearchItem;
+import com.example.networkaplication.models.search.Search;
+import com.example.networkaplication.models.search.SearchObject;
+
 import com.example.networkaplication.persistance.model.MovieQuery;
 
 import java.util.ArrayList;
 
-public class HomePresenterImpl extends AndroidViewModel implements HomeContract.HomePresenter {
+public class HomePresenterImpl extends AndroidViewModel implements HomeContract.HomePresenter, HomeCallback {
 
     private HomeContract.HomeView view;
-    private HomeContract.HomeReposytory repository;
+    private HomeContract.HomeRepository repository;
     private ArrayList<SearchItem> searchItems = new ArrayList<>();
 
-    public HomePresenterImpl(@NonNull Application application, HomeContract.HomeView view) {
+    HomePresenterImpl(@NonNull Application application, HomeContract.HomeView view) {
         super(application);
         this.view = view;
-        this.repository = new HomeRepositoryImpl(application);
+        this.repository = new HomeRepositoryImpl(application, this);
     }
 
     @Override
@@ -38,7 +39,7 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
         boolean result = false;
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
             hideKeyboard(v);
-            refreshSearchAdapter(new ArrayList<SearchItem>());
+            clearSearchAdapter();
             search(v.getText().toString());
             result = true;
         }
@@ -53,31 +54,25 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
     }
 
     @Override
-    public void refreshSearchAdapter(ArrayList<SearchItem> item) {
-        if (item.size() == 0)
+    public void refreshSearchAdapter() {
+        if (searchItems.size() == 0)
             view.getSearchRecycle().setVisibility(View.INVISIBLE);
         else
             view.getSearchRecycle().setVisibility(View.VISIBLE);
-
-        view.setSearchAdapter(item);
+      
+        view.setSearchAdapter(searchItems);
     }
 
     @Override
-    public void startDetailsView(ItemData itemData) {
-        DetailsViewFragment view = DetailsViewFragment.newInstance(itemData.getTitle(), itemData.getOmdbId());
-        FragmentManager manager = this.view.getHomeViewActivity().getSupportFragmentManager();
-        FragmentTransaction transaction = manager.beginTransaction();
-        transaction.addToBackStack(DetailsViewFragment.class.getSimpleName())
-                .replace(R.id.RelativeForFragments, view);
-        transaction.commit();
-        this.view.getHomeViewActivity()
-                .getSupportActionBar()
-                .setDisplayHomeAsUpEnabled(true);
+    public void clearSearchAdapter() {
+        view.getSearchRecycle().setVisibility(View.INVISIBLE);
+        searchItems = new ArrayList<>();
+        view.setSearchAdapter(searchItems);
     }
 
     @Override
-    public void setTextToView() {
-
+    public DetailsViewFragment createDetailsView(ItemData itemData) {
+        return DetailsViewFragment.newInstance(itemData.getTitle(), itemData.getOmdbId());
     }
 
     @Override
@@ -89,12 +84,12 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
 
     @Override
     public void search(String searchRequest) {
-        repository.startSearch(searchRequest, view);
+
+        repository.startSearch(searchRequest);
     }
 
     @Override
     public void addUniqueMovie(String title) {
-
         if (repository.findByTitle(title) == null) {
             MovieQuery movieQuery = new MovieQuery(view.getSearchText(),
                     System.currentTimeMillis());
@@ -104,7 +99,8 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
 
     @Override
     public void onTextChanged(CharSequence sequence, boolean isSearchPopped) {
-        refreshSearchAdapter(new ArrayList<SearchItem>());
+        clearSearchAdapter();
+      
         if (isSearchPopped) {
             ArrayList<MovieQuery> movies = new ArrayList<>(
                     repository.findAllFromQuery(sequence.toString() + "%"));
@@ -113,30 +109,48 @@ public class HomePresenterImpl extends AndroidViewModel implements HomeContract.
                 searchItems.add(new SearchItem(movie.getName()));
             }
 
-            refreshSearchAdapter(searchItems);
+            refreshSearchAdapter();
         } else HomeViewFragment.setIsSearchViewPopped(true);
     }
 
     @Override
     public void onFocusChanged(View view, boolean hasFocus) {
         if (hasFocus) {
-            refreshSearchAdapter(searchItems);
+            refreshSearchAdapter();
         } else {
-            refreshSearchAdapter(new ArrayList<SearchItem>());
+            clearSearchAdapter();
             hideKeyboard(view);
         }
     }
 
     @Override
-    public void onClickedSearchItem(View view, SearchItem itemData) {
-        if (view.getId() == R.id.delete_query) {
+    public void onClickedSearchItem(int viewId, SearchItem itemData) {
+        if (viewId == R.id.delete_query) {
             searchItems.remove(itemData);
-            refreshSearchAdapter(searchItems);
+            refreshSearchAdapter();
+        } else {
+            view.setSearchText(itemData.getSearchText());
+            clearSearchAdapter();
+        }
+    }
 
+    @Override
+    public void onSearchReceived(Search search) {
+        String title = view.getSearchText();
+        addUniqueMovie(title);
+
+        ArrayList<ItemData> data = new ArrayList<>();
+
+        for (SearchObject object : search.getSearch()) {
+            ItemData item = new ItemData(
+                    object.getPoster(),
+                    object.getTitle(),
+                    object.getImdbID());
+
+            data.add(item);
         }
-        else {
-            this.view.setSearchText(itemData.getSearchText());
-            refreshSearchAdapter(new ArrayList<SearchItem>());
-        }
+
+        view.setBundleFromSearch(search.getSearch());
+        view.setItemDataToAdapter(data);
     }
 }

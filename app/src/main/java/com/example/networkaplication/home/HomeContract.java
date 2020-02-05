@@ -1,16 +1,17 @@
 package com.example.networkaplication.home;
 
-import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.networkaplication.MainActivity;
+import com.example.networkaplication.details.DetailsViewFragment;
 import com.example.networkaplication.home.adapter.HomeAdapter;
 import com.example.networkaplication.home.adapter.ItemData;
 import com.example.networkaplication.home.search.story.SearchItem;
 import com.example.networkaplication.home.search.story.SearchStoryAdapter;
+import com.example.networkaplication.models.search.SearchObject;
 import com.example.networkaplication.persistance.model.MovieQuery;
 
 import java.util.ArrayList;
@@ -24,13 +25,9 @@ public interface HomeContract {
 
         MainActivity getHomeViewActivity();
 
-        RecyclerView getFragmentRecycle();
-
         void setRecycleViewAdapter(HomeAdapter adapter);
 
         RecyclerView getSearchRecycle();
-
-        void setItemData(ArrayList<ItemData> itemData);
 
         void setSearchAdapter(ArrayList<SearchItem> item);
 
@@ -38,13 +35,9 @@ public interface HomeContract {
 
         void setSearchText(String text);
 
-        void setArgumentsToView(Bundle bundle);
+        void setBundleFromSearch(List<SearchObject> objects);
 
         void setItemDataToAdapter(ArrayList<ItemData> itemData);
-
-        void addMovieIfNotExist(String title);
-
-        boolean getIsSearchViewPopped();
     }
 
     interface  HomePresenter {
@@ -53,11 +46,11 @@ public interface HomeContract {
 
         void setItemToDataAdapter(ArrayList<ItemData> items);
 
-        void refreshSearchAdapter(ArrayList<SearchItem> item);
+        void refreshSearchAdapter();
 
-        void startDetailsView(ItemData itemData);
+        DetailsViewFragment createDetailsView(ItemData itemData);
 
-        void setTextToView();
+        void clearSearchAdapter();
 
         void hideKeyboard(View view);
 
@@ -69,11 +62,11 @@ public interface HomeContract {
 
         void onFocusChanged(View view, boolean hasFocus);
 
-        void onClickedSearchItem(View view, SearchItem itemData);
+        void onClickedSearchItem(int viewId, SearchItem itemData);
     }
 
-    interface HomeReposytory{
-        void startSearch(String searchRequest, HomeView view);
+    interface HomeRepository {
+        void startSearch(String searchRequest);
 
         List<MovieQuery> findAllFromQuery(String serach);
 

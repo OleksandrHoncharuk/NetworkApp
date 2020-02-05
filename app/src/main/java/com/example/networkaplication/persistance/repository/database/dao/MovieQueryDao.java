@@ -14,7 +14,8 @@ import java.util.List;
 @Dao
 public abstract class MovieQueryDao {
 
-    @Insert(onConflict = OnConflictStrategy.ROLLBACK)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+
     public abstract void insert (MovieQuery movieQuery);
 
     @Transaction

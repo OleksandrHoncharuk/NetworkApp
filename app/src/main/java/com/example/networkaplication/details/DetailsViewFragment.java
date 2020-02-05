@@ -1,27 +1,42 @@
 package com.example.networkaplication.details;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
+
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.networkaplication.MainActivity;
 import com.example.networkaplication.R;
+import com.example.networkaplication.home.HomeViewFragment;
+import com.example.networkaplication.idling.EspressoIdlingResource;
 import com.example.networkaplication.persistance.model.Details;
+import com.example.networkaplication.retrofit.RetrofitModule;
+import com.example.networkaplication.webview.WebViewFragment;
 
 import java.util.Objects;
 
@@ -34,11 +49,13 @@ public class DetailsViewFragment extends Fragment implements DetailsContract.Det
     private TextView details;
     private TextView genre;
     private TextView plotSummary;
+    private ImageButton save;
     private SharedPreferences sharedPreferences;
     private static final String FILM_NAME = "FILM_NAME";
     private static final String OMDBID = "OMDBID";
     private String omdbId;
     private boolean isOffline = false;
+    private MenuItem offline;
     private DetailsContract.DetailsPresenter presenter;
 
     public static DetailsViewFragment newInstance(String filmName, String omdbId) {
@@ -76,8 +93,9 @@ public class DetailsViewFragment extends Fragment implements DetailsContract.Det
         details = rootView.findViewById(R.id.details);
         genre = rootView.findViewById(R.id.genre);
         plotSummary = rootView.findViewById(R.id.plot_summary);
+        offline = rootView.findViewById(R.id.offline);
 
-        ImageButton save = rootView.findViewById(R.id.save_image);
+        save = rootView.findViewById(R.id.save_image);
         save.setOnClickListener(this);
 
         sharedPreferences = ((MainActivity) getActivity())
@@ -110,15 +128,35 @@ public class DetailsViewFragment extends Fragment implements DetailsContract.Det
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (presenter.onOptionItemSelected(item))
+        if (presenter.onOptionItemSelected(item.getItemId()))
             return true;
 
         return super.onOptionsItemSelected(item);
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        menu.findItem(R.id.offline).setChecked(presenter.isOffline());
+    }
+
+    @Override
     public void onClick(View v) {
-        presenter.onSaveImageClicked(omdbId);
+        if (ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+            } else {
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+
+            }
+        } else {
+            presenter.onSaveImageClicked(omdbId);
+        }
     }
 
     @Override
@@ -137,19 +175,70 @@ public class DetailsViewFragment extends Fragment implements DetailsContract.Det
         details.setText(detail.getDetails());
         genre.setText(detail.getGenre());
         plotSummary.setText(detail.getPlotSummary());
+
+        if (!EspressoIdlingResource.getIdlingResource().isIdleNow()) {
+            EspressoIdlingResource.decrement();
+        }
     }
 
     @Override
     public ImageView getImageView() {
         return poster;
     }
-
-    @Override
-    public MainActivity getViewActivity() {
-        return (MainActivity)getActivity();
-    }
-
+          
     public void saveImageToExStorage(){
         presenter.onSaveImageClicked(omdbId);
+    }
+
+    @Override
+    public void saveIsOffline() {
+        if (sharedPreferences != null) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean(omdbId, true);
+            editor.apply();
+        }
+    }
+
+    public void backClicked() {
+        HomeViewFragment.setIsSearchViewPopped(false);
+        getActivity().onBackPressed();
+    }
+
+    public void showWebView() {
+        FragmentTransaction transaction =
+                getActivity().getSupportFragmentManager().beginTransaction();
+        transaction.addToBackStack("").replace(R.id.RelativeForFragments,
+                WebViewFragment.newInstance(RetrofitModule.BASE_URL),
+                WebViewFragment.class.getSimpleName());
+        transaction.commit();
+    }
+
+    public void showBrowser() {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(RetrofitModule.BASE_URL));
+        getActivity().startActivity(browserIntent);
+    }
+
+    public void showAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog
+                .Builder(getActivity());
+
+        builder.setTitle("Very dump message!")
+                .setMessage("This...is..ALERT DIALOG!")
+                .setCancelable(false)
+                .setNegativeButton("ОК",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+        final AlertDialog alert = builder.create();
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                alert.show();
+            }
+        }, 5000);
     }
 }
