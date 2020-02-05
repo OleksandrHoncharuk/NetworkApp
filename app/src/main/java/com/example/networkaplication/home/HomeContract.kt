@@ -1,23 +1,15 @@
 package com.example.networkaplication.home
 
-import android.text.TextWatcher
 import android.view.View
 import android.widget.TextView
-import androidx.databinding.ObservableField
-import androidx.lifecycle.MutableLiveData
-
 import androidx.recyclerview.widget.RecyclerView
-
 import com.example.networkaplication.MainActivity
 import com.example.networkaplication.details.DetailsViewFragment
 import com.example.networkaplication.home.adapter.HomeAdapter
 import com.example.networkaplication.home.adapter.ItemData
 import com.example.networkaplication.home.search.story.SearchItem
 import com.example.networkaplication.home.search.story.SearchStoryAdapter
-import com.example.networkaplication.models.search.SearchObject
 import com.example.networkaplication.persistance.model.MovieQuery
-
-import java.util.ArrayList
 
 interface HomeContract {
 
@@ -30,9 +22,7 @@ interface HomeContract {
         fun setRecycleViewAdapter(adapter: HomeAdapter)
     }
 
-    interface HomeViewModel: CustomOnEditorActionListener, CustomOnFocusChangeListener, SearchStoryAdapter.OnSearchItemClickedListener, HomeAdapter.OnFilmClickedListener{
-
-        val searchText: ObservableField<String>
+    interface HomeViewModel : CustomOnEditorActionListener, CustomOnFocusChangeListener, SearchStoryAdapter.OnSearchItemClickedListener, HomeAdapter.OnFilmClickedListener {
 
         override fun onEditorAction(v: TextView?, actionId: Int)
 

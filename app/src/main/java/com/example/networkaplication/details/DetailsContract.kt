@@ -27,6 +27,8 @@ interface DetailsContract {
         fun showBrowser()
 
         fun showAlertDialog()
+
+        fun getPermission()
     }
 
     interface DetailsViewModel {

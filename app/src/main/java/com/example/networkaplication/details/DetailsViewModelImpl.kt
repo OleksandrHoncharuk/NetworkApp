@@ -1,6 +1,7 @@
 package com.example.networkaplication.details
 
 import android.app.Application
+import android.view.View
 import androidx.lifecycle.AndroidViewModel
 
 import com.bumptech.glide.Glide
@@ -12,7 +13,7 @@ import com.example.networkaplication.persistance.model.Details
 class DetailsViewModelImpl internal constructor(app: Application, private val view: DetailsContract.DetailsView) : AndroidViewModel(app), DetailsContract.DetailsViewModel, DetailsCallback {
 
     private val repository: DetailsContract.DetailsRepository
-    private var details: Details? = null
+    var details: Details? = null
     override var isOffline = false
 
     init {
@@ -56,7 +57,7 @@ class DetailsViewModelImpl internal constructor(app: Application, private val vi
 
     override fun initViewById(omdbId: String) {
         view.setImage(repository.loadImage(omdbId)!!)
-        view.initDetails(repository.getDetailFromId(omdbId))
+        details = repository.getDetailFromId(omdbId)
     }
 
     override fun onSaveImageClicked(omdbId: String) {
@@ -75,8 +76,6 @@ class DetailsViewModelImpl internal constructor(app: Application, private val vi
                         movie.country, movie.imdbRating)
         details!!.details = detailsLine
         details!!.plotSummary = movie.plot
-
-        view.initDetails(details!!)
     }
 
     private fun setImage(poster: String?) {
@@ -87,9 +86,12 @@ class DetailsViewModelImpl internal constructor(app: Application, private val vi
                 .into(view.imageView)
     }
 
+    fun onSaveClick(v: View) {
+        view.getPermission()
+    }
+
     override fun onDetailsReceived(details: Details) {
         this.details = details
-        view.initDetails(details)
     }
 
     private fun backClicked() {

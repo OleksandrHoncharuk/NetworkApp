@@ -24,33 +24,32 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
 
 import com.example.networkaplication.MainActivity
 import com.example.networkaplication.R
+import com.example.networkaplication.databinding.DetailsFragmentBinding
 import com.example.networkaplication.home.HomeViewFragment
 import com.example.networkaplication.idling.EspressoIdlingResource
 import com.example.networkaplication.persistance.model.Details
 import com.example.networkaplication.retrofit.RetrofitModule
 import com.example.networkaplication.webview.WebViewFragment
+import kotlinx.android.synthetic.main.details_fragment.*
 
-class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClickListener {
+class DetailsViewFragment : Fragment(), DetailsContract.DetailsView {
 
     private lateinit var filmName: String
-    override lateinit var imageView: ImageView
-    private lateinit var title: TextView
-    private lateinit var details: TextView
-    private lateinit var genre: TextView
-    private lateinit var plotSummary: TextView
-    private lateinit var save: ImageButton
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var omdbId: String
+    override lateinit var imageView: ImageView
     private val isOffline = false
     private lateinit var offline: MenuItem
     private lateinit var viewModel: DetailsContract.DetailsViewModel
+    private lateinit var dataBinding: DetailsFragmentBinding
 
     override val image: Bitmap
-        get() = (imageView.drawable as BitmapDrawable).bitmap
+        get() = (detail_poster.drawable as BitmapDrawable).bitmap
 
     override fun onStart() {
         super.onStart()
@@ -79,21 +78,24 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-        val rootView = inflater.inflate(R.layout.details_fragment, container, false)
+        dataBinding = DataBindingUtil
+                .inflate(inflater, R.layout.details_fragment, container, false)
+
+
+        return dataBinding.root
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
 
         viewModel = ViewModelProviders.of(
                 this,
                 DetailsViewModelFactory(activity!!.application, this))
                 .get(DetailsViewModelImpl::class.java)
 
-        imageView = rootView.findViewById(R.id.detail_poster)
-        title = rootView.findViewById(R.id.film_name)
-        details = rootView.findViewById(R.id.details)
-        genre = rootView.findViewById(R.id.genre)
-        plotSummary = rootView.findViewById(R.id.plot_summary)
+        imageView = detail_poster
 
-        save = rootView.findViewById(R.id.save_image)
-        save.setOnClickListener(this)
+        dataBinding.viewModel = viewModel as DetailsViewModelImpl
 
         sharedPreferences = (activity as MainActivity)
                 .getSharedPreferences("offline", Context.MODE_PRIVATE)
@@ -108,8 +110,6 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
             viewModel.initView(filmName)
         else
             viewModel.initViewById(omdbId)
-
-        return rootView
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -126,7 +126,7 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
         menu!!.findItem(R.id.offline).isChecked = viewModel.isOffline
     }
 
-    override fun onClick(v: View) {
+    override fun getPermission() {
         if (ContextCompat.checkSelfPermission(activity!!,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
@@ -144,14 +144,14 @@ class DetailsViewFragment : Fragment(), DetailsContract.DetailsView, View.OnClic
     }
 
     override fun setImage(imageUri: Uri) {
-        imageView.setImageURI(imageUri)
+        dataBinding.detailPoster.setImageURI(imageUri)
     }
 
     override fun initDetails(details: Details) {
-        title.text = details.title
-        this.details.text = details.details
-        genre.text = details.genre
-        plotSummary.text = details.plotSummary
+        dataBinding.filmName.text = details.title
+        dataBinding.details.text = details.details
+        dataBinding.genre.text = details.genre
+        dataBinding.plotSummary.text = details.plotSummary
 
         if (!EspressoIdlingResource.idlingResource.isIdleNow) {
             EspressoIdlingResource.decrement()

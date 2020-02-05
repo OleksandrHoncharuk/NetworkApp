@@ -74,6 +74,9 @@ class HomeViewFragment : Fragment(), HomeContract.HomeView {
 
         binding.viewModel = viewModel
 
+        viewModel.searchText.observe(this, Observer { value ->
+            search_button.setText(value)})
+
         restoreSearchResult()
     }
 

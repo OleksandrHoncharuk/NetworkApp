@@ -91,14 +91,14 @@ class DetailsRepositoryImpl internal constructor(app: Application, private val c
                 details1.genre = movie.genre
                 details1.details = detailsLine
                 details1.plotSummary = movie.plot
-                callback.onDetailsReceived(details1)
+//                callback.onDetailsReceived(details1)
                 detailsDao.insert(details1)
             } else {
                 details.title = movie.title
                 details.genre = movie.genre
                 details.details = detailsLine
                 details.plotSummary = movie.plot
-                callback.onDetailsReceived(details)
+//                callback.onDetailsReceived(details)
                 detailsDao.update(details)
             }
 

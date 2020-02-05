@@ -33,7 +33,6 @@
             android:importantForAutofill="no"
             android:inputType="text"
             android:textSize="18sp"
-            android:text="@={viewModel.searchText}"
             android:onTextChanged="@{viewModel::onTextChanged}"
             app:customOnEditorActionListener="@{viewModel}"
             app:customOnFocusChangeListener="@{viewModel}"
@@ -70,7 +69,7 @@
             android:layout_marginBottom="8dp"
             android:background="#E6FFFFFF"
             android:scrollbars="vertical"
-            android:visibility="@{viewModel.searchItemEmpty ? View.INVISIBLE : View.VISIBLE}"
+
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"

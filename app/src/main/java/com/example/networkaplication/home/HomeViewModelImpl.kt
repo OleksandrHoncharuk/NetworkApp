@@ -6,7 +6,9 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
-import androidx.databinding.ObservableField
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.networkaplication.R
 import com.example.networkaplication.details.DetailsViewFragment
@@ -29,9 +31,12 @@ class HomeViewModelImpl internal constructor(application: Application, private v
     var searchAdapter: SearchStoryAdapter
     private var items = ArrayList<ItemData>()
 
-    override val searchText: ObservableField<String> = ObservableField()
+    private val _searchText: MutableLiveData<String> = MutableLiveData()
+
+    val searchText: LiveData<String> get() = _searchText
 
     init {
+        _searchText.value = ""
         adapter = HomeAdapter(ListPresenter(items))
         adapter.setOnFilmClickedListener(this)
 
@@ -85,7 +90,7 @@ class HomeViewModelImpl internal constructor(application: Application, private v
 
     override fun addUniqueMovie(title: String) {
         if (repository.findByTitle(title) == null) {
-            val movieQuery = MovieQuery(searchText.get()!!, System.currentTimeMillis())
+            val movieQuery = MovieQuery(_searchText.value!!.toString(), System.currentTimeMillis())
             repository.insertIntoQuery(movieQuery)
         }
     }
@@ -119,7 +124,7 @@ class HomeViewModelImpl internal constructor(application: Application, private v
                 searchItems.remove(itemData)
                 refreshSearchAdapter()
             } else {
-                searchText.set(itemData.searchText)
+                _searchText.value = itemData.searchText
                 clearSearchAdapter()
             }
 
@@ -136,8 +141,8 @@ class HomeViewModelImpl internal constructor(application: Application, private v
     }
 
     override fun onSearchReceived(search: Search) {
-        val title = searchText.get()
-        addUniqueMovie(title!!)
+        val title = _searchText.value!!
+        addUniqueMovie(title)
 
 
         val data = ArrayList<ItemData>()
